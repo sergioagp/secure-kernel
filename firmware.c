@@ -11,7 +11,7 @@ unsigned char *encrypt_sig_out;
 
 void fw_signature(unsigned char *kernel_certificate_sig, unsigned char *kernel_certificate) {
 
-  //XXX: Change to RSA instead of using the ed25519
+  //FIXME: Change to RSA instead of using the ed25519
 
 	//Sign the kernel certificate with the root private key.
 	unsigned char device_privkey[32];

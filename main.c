@@ -7,6 +7,8 @@
 #include "attestation.h"
 #include "security_kernel.h"
 
+#include "verifier/verifier.h"
+
 typedef struct{
 	attestation_t attestation;
     unsigned char attest_sig[ATTEST_SIG_SIZE];
@@ -28,13 +30,13 @@ void print_array(unsigned char* array, unsigned int len) {
 }
 
 void wait_attestation_request(unsigned char* nonce, unsigned char* verifier_pubkey) {
-  unsigned char keygen_seed[32];
-  unsigned char verifier_privkey[32];
-  ed25519_create_seed(keygen_seed);
-  ed25519_create_keypair(verifier_pubkey, verifier_privkey, keygen_seed);
+  //HACK: Need to wait for the verfier and then get the nonce and verifier_pubkety from sh mem
+  send_attestation_request(nonce, verifier_pubkey);
+
 }
 
 void send_report_to_verifier(report_t* report) {
+  #ifdef DEBUG_W_PRINTF
   xil_printf("Report Generated!\r\n");
   xil_printf("\r\nNONCE: ");
   print_array(report->attestation.nonce, NONCE_SIZE);
@@ -48,22 +50,18 @@ void send_report_to_verifier(report_t* report) {
   print_array(report->attest_sig, ATTEST_SIG_SIZE);
   xil_printf("\r\nShared Secrect SIG: ");
   print_array(report->shared_secret_sig, SHARED_SECR_SIZE);
-  
-  xil_printf("\r\nSending report to the verifier...");
-  
+  #endif
+
+  xil_printf("\r\nSending report to the verifier...\r\n");
+  //HACK: Need to first send the report to a shared memory and then wait for the other core to recv
+  if(!recv_report_from_sk((const unsigned char*) report, (const unsigned int) sizeof(report_t))) {
+      xil_printf("\r\nERROR: Attestation failed!\r\n");
+      return -1;
+  }
+  xil_printf("report verified!");
+
+  return 0;
 }
-
-// void decrypt_bitstream_key(unsigned char* bitstream_key_buffer){
-
-// 	//Get the pointer to the tag, ciphertext, and IV
-// 	// u8* iv_addr = (u8*) (SHARED_MEM_BASE + BITSTREAM_KEY_OFFSET);
-// 	// u8* gcm_tag_addr = (u8*) (SHARED_MEM_BASE + BITSTREAM_KEY_OFFSET + IV_SIZE);
-// 	// u8* ciphertext_addr = (u8*) (SHARED_MEM_BASE + BITSTREAM_KEY_OFFSET + IV_SIZE + TAG_SIZE);
-
-//     //get ciphertext_addr
-//     unsigned char* ciphertext_addr;
-//     securitykernel_decrypt(bitstream_key_buffer, ciphertext_addr);
-// }
 
 int main() {
   // Initialize the platform for use
@@ -101,11 +99,13 @@ int main() {
   unsigned char session_key[SESSION_KEY_SIZE];
   generate_sessionkey(verifier_pubkey, shared_secret_sig, session_key);
 
-  // Send the report to the verifier
+  // Generate the report 
   report_t  report;
   memcpy((unsigned char *)&report.attestation, (unsigned char *) &attestation, ATTESTATION_SIZE);
   memcpy(report.attest_sig, attestation_sig, ATTEST_SIG_SIZE);
   memcpy(report.shared_secret_sig, shared_secret_sig, SHARED_SECR_SIZE);
+
+  //send the report to the verifier
   send_report_to_verifier(&report);
 
    //Now, wait for the runtime to provide an encrypted bitstream (encrypted with bitstream decryption key).

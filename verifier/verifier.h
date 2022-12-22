@@ -1,8 +1,6 @@
 #ifndef VERIFIER_H
 #define VERIFIER_H
 
-#include <stdint.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -16,17 +14,18 @@ extern "C" {
  *
  * @return 0 on success, non-zero on failure.
  */
-int send_attestation_request(uint8_t* nonce, uint8_t* verifier_pubkey);
+int send_attestation_request(unsigned char* nonce, unsigned char* verifier_pubkey);
 
 /**
- * @brief Verifies the attestation report provided by the security kernel.
+ * @brief Receive the attestation report provided by the security kernel.
  *
  * @param[in] report Pointer to the attestation report.
  * @param[in] report_len Length of the attestation report in bytes.
  *
  * @return 0 on success, non-zero on failure.
  */
-int verify_attestation_report(const unsigned char * report, uint32_t report_len, attestation_t* attestation);
+int recv_report_from_sk(const unsigned char* report, const unsigned int report_len);
+
 
 #ifdef __cplusplus
 }
