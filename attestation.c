@@ -33,7 +33,7 @@ int generate_kernel_certificate(unsigned char* kernel_cert_hash, unsigned char* 
 
 int generate_attestation(unsigned char* nonce, unsigned char* kernel_hash,
                          unsigned char* kernel_cert_sig, attestation_t* attestation) {
-  if (!nonce || !kernel_hash || !kernel_cert_sig || !report) {
+  if (!nonce || !kernel_hash || !kernel_cert_sig || !attestation) {
     return -1;
   }
 

@@ -13,7 +13,7 @@ typedef struct{
     unsigned char shared_secret_sig[SHARED_SECR_SIZE];
 } report_t;
 
-unsigned char kernel_hash[32] = {0x0E,0xAB,0x42,0xDE,0x4C,0x3C,0xEB,0x92,0x35,0xFC,
+unsigned char kernel_hash[KERNEL_HASH_SIZE] = {0x0E,0xAB,0x42,0xDE,0x4C,0x3C,0xEB,0x92,0x35,0xFC,
                                  0x91,0xAC,0xFF,0xE7,0x46,0xB2,0x9C,0x29,0xA8,0xC3,
                                  0x66,0xB7,0xC6,0x0E,0x4E,0x67,0xC4,0x66,0xF3,0x6A,
                                  0x43,0x04,0xC0,0x0F,0xA9,0xCA,0xF9,0xD8,0x79,0x76,
@@ -21,19 +21,36 @@ unsigned char kernel_hash[32] = {0x0E,0xAB,0x42,0xDE,0x4C,0x3C,0xEB,0x92,0x35,0x
                                  0x91,0xEF,0x27,0x69,0xFB,0x16,0x0C,0xDA,0xB3,0x3D,
                                  0x36,0x70,0x68,0x0E};
 
-
-void wait_attestation_request(unsigned char* nonce, unsigned char* verifier_pubkey)
-{
-  unsigned char keygen_seed[32];
-  ed25519_create_seed(keygen_seed);
-  ed25519_create_keypair(attest_pubkey, attest_privkey, keygen_seed);
+void print_array(unsigned char* array, unsigned int len) {
+  for (int i = 0; i < len; i++){
+    		xil_printf("%02x", array[i]);
+  }
 }
 
-void send_report_to_verifier(report_t* report)
-{
+void wait_attestation_request(unsigned char* nonce, unsigned char* verifier_pubkey) {
+  unsigned char keygen_seed[32];
+  unsigned char verifier_privkey[32];
+  ed25519_create_seed(keygen_seed);
+  ed25519_create_keypair(verifier_pubkey, verifier_privkey, keygen_seed);
+}
+
+void send_report_to_verifier(report_t* report) {
   xil_printf("Report Generated!\r\n");
-  xil_printf("NONCE: \r\n");
-  xil_printf("ATTEST PUBKEY: \r\n");
+  xil_printf("\r\nNONCE: ");
+  print_array(report->attestation.nonce, NONCE_SIZE);
+  xil_printf("\r\nATTEST PUBKEY: ");
+  print_array(report->attestation.attest_pubkey, PUB_KEY_SIZE);
+  xil_printf("\r\nKERNEL HASH: ");
+  print_array(report->attestation.kernel_hash, KERNEL_HASH_SIZE);
+  xil_printf("\r\nKERNEL CERT SIG: ");
+  print_array(report->attestation.kernel_cert_sig, KERNEL_CERT_SIG_SIZE);
+  xil_printf("\r\n ATTEST SIG: ");
+  print_array(report->attest_sig, ATTEST_SIG_SIZE);
+  xil_printf("\r\nShared Secrect SIG: ");
+  print_array(report->shared_secret_sig, SHARED_SECR_SIZE);
+  
+  xil_printf("\r\nSending report to the verifier...");
+  
 }
 
 // void decrypt_bitstream_key(unsigned char* bitstream_key_buffer){
@@ -54,10 +71,10 @@ int main() {
 
   // Wait for an attestation request and store the nonce and verifier public key
   unsigned char nonce[NONCE_SIZE];
-  unsigned char verifier_pubkey[PUBKEY_SIZE];
+  unsigned char verifier_pubkey[PUB_KEY_SIZE];
   wait_attestation_request(nonce, verifier_pubkey);
   
-  xil_printf("--Security Kernel--\r\n");
+  xil_printf("-- Security Kernel --\r\n");
 
   // Wait for an attestation request and store the nonce and verifier public key
   create_attest_keypair();
@@ -80,13 +97,13 @@ int main() {
 
   // Generate the session key using the verifier public key and store it in session_key
   // Also generate the shared secret signature and store it in shared_secret_sig
-  unsigned char shared_secret_sig[SHARED_SECR_SIG_SIZE];
+  unsigned char shared_secret_sig[SHARED_SECR_SIZE];
   unsigned char session_key[SESSION_KEY_SIZE];
-  generate_sessionkey(verifier_pubkey, shared_secret_sig, session_key)
+  generate_sessionkey(verifier_pubkey, shared_secret_sig, session_key);
 
   // Send the report to the verifier
   report_t  report;
-  memcpy(report.attestation, attestation, ATTESTATION_SIZE);
+  memcpy((unsigned char *)&report.attestation, (unsigned char *) &attestation, ATTESTATION_SIZE);
   memcpy(report.attest_sig, attestation_sig, ATTEST_SIG_SIZE);
   memcpy(report.shared_secret_sig, shared_secret_sig, SHARED_SECR_SIZE);
   send_report_to_verifier(&report);

@@ -14,11 +14,11 @@ void fw_signature(unsigned char *kernel_certificate_sig, unsigned char *kernel_c
   //XXX: Change to RSA instead of using the ed25519
 
 	//Sign the kernel certificate with the root private key.
-	unsigned char device_privkey[ATTEST_KEY_SIZE];
-	unsigned char device_pubkey[ATTEST_KEY_SIZE];
+	unsigned char device_privkey[32];
+	unsigned char device_pubkey[32];
 	unsigned char keygen_seed[32];
-  ed25519_create_seed(keygen_seed);
-  ed25519_create_keypair(device_pubkey, device_privkey, keygen_seed);
+	ed25519_create_seed(keygen_seed);
+	ed25519_create_keypair(device_pubkey, device_privkey, keygen_seed);
 
 
 	ed25519_sign(kernel_certificate_sig, (unsigned char *) &kernel_certificate, RSA_SIZE, device_pubkey, device_privkey);

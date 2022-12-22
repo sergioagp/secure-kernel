@@ -10,14 +10,13 @@
 
 #define ATTESTATION_SIZE    	(sizeof(attestation_t))
 
-//TODO: check the real values of size
-#define NONCE_SIZE            32
 #define NONCE_SIZE            32
 #define PRIV_KEY_SIZE		  	  32
 #define PUB_KEY_SIZE		  	  32
 #define ATTEST_SIG_SIZE       32
 
-#define KERNEL_HASH_SIZE      32
+#define KERNEL_HASH_SIZE      64
+#define KERNEL_CERT_SIZE      32
 #define KERNEL_CERT_SIG_SIZE 	32
 #define SHARED_SECR_SIZE      32
 #define SESSION_KEY_SIZE 	    32
