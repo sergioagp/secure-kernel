@@ -9,8 +9,8 @@
 
 #include "crypto.h"
 
-unsigned char attest_privkey[ATTEST_KEY_SIZE];
-unsigned char attest_pubkey[ATTEST_KEY_SIZE];
+unsigned char attest_privkey[PRIV_KEY_SIZE];
+unsigned char attest_pubkey[PUB_KEY_SIZE];
 
 int create_attest_keypair() {
   // Use a cryptographic library to generate an attestation keypair
@@ -32,15 +32,15 @@ int generate_kernel_certificate(unsigned char* kernel_cert_hash, unsigned char* 
 }
 
 int generate_attestation(unsigned char* nonce, unsigned char* kernel_hash,
-                         unsigned char* kernel_cert_sig, attestation_t* report) {
+                         unsigned char* kernel_cert_sig, attestation_t* attestation) {
   if (!nonce || !kernel_hash || !kernel_cert_sig || !report) {
     return -1;
   }
 
-  memcpy(report->nonce, nonce, NONCE_SIZE);
-  memcpy(report->attest_pubkey, attest_pubkey, ATTEST_KEY_SIZE);
-  memcpy(report->kernel_hash, kernel_hash, KERNEL_HASH_SIZE);
-  memcpy(report->kernel_cert_sig, kernel_cert_sig, KERNEL_CERT_SIG_SIZE);
+  memcpy(attestation->nonce, nonce, NONCE_SIZE);
+  memcpy(attestation->attest_pubkey, attest_pubkey, PUB_KEY_SIZE);
+  memcpy(attestation->kernel_hash, kernel_hash, KERNEL_HASH_SIZE);
+  memcpy(attestation->kernel_cert_sig, kernel_cert_sig, KERNEL_CERT_SIG_SIZE);
 
   return 0;
 }
@@ -70,17 +70,17 @@ int generate_sessionkey(unsigned char* verifier_pubkey, unsigned char* shared_se
 
   // Use the attestation private key and a cryptographic library to generate a
   // session key based on the verifier's public key and store it in session_key
-  unsigned char shared_secret[32];
+  unsigned char shared_secret[SHARED_SECR_SIZE];
 
   ed25519_key_exchange(shared_secret, verifier_pubkey, attest_privkey);
 
-  ed25519_sign(shared_secret_sig, shared_secret, 32, attest_pubkey, attest_privkey);
+  ed25519_sign(shared_secret_sig, shared_secret, SHARED_SECR_SIZE, attest_pubkey, attest_privkey);
 
-	if(!ed25519_verify(shared_secret_sig, (unsigned char *) shared_secret, 32, attest_pubkey)) {
+	if(!ed25519_verify(shared_secret_sig, (unsigned char *) shared_secret, SHARED_SECR_SIZE, attest_pubkey)) {
     return -1;
   }
 
-  sha3(shared_secret, 32, session_key, 32);
+  sha3(shared_secret, SHARED_SECR_SIZE, session_key, SESSION_KEY_SIZE);
 
   return 0;
 }

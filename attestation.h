@@ -10,14 +10,21 @@
 
 #define ATTESTATION_SIZE    	(sizeof(attestation_t))
 
-#define NONCE_SIZE				0x20
-#define ATTEST_KEY_SIZE		  	0x20
-#define KERNEL_HASH_SIZE 		0x30
-#define KERNEL_CERT_SIG_SIZE 	0x200
+//TODO: check the real values of size
+#define NONCE_SIZE            32
+#define NONCE_SIZE            32
+#define PRIV_KEY_SIZE		  	  32
+#define PUB_KEY_SIZE		  	  32
+#define ATTEST_SIG_SIZE       32
+
+#define KERNEL_HASH_SIZE      32
+#define KERNEL_CERT_SIG_SIZE 	32
+#define SHARED_SECR_SIZE      32
+#define SESSION_KEY_SIZE 	    32
 
 typedef struct{
 	unsigned char nonce[NONCE_SIZE];
-	unsigned char attest_pubkey[ATTEST_KEY_SIZE];
+	unsigned char attest_pubkey[PUB_KEY_SIZE];
 	unsigned char kernel_hash[KERNEL_HASH_SIZE];
 	unsigned char kernel_cert_sig[KERNEL_CERT_SIG_SIZE];
 } attestation_t;
